@@ -2,6 +2,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, flash, session, url_for
 from decimal import Decimal
 import mysql.connector
+from functools import wraps
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = 'atm_interface'  # For flash messages
@@ -73,24 +74,28 @@ def login():
         return redirect('/')
     return render_template('index.html')  # Show login form if GET request
 
-@app.route('/menu', methods=['GET', 'POST'])
+@app.route('/exit')
+def exit():
+    session.clear()
+    return redirect(url_for('index'))
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/menu')
+@login_required
 def menu():
-    if request.method == 'POST':
-        transaction = request.form.get('menu')
-        templates = {
-            'balance': 'balance_inquiry.html',
-            'withdraw': 'withdraw.html',
-            'change_pin': 'change_pin.html',
-        }
-        redirects = {
-            'statement': '/mini_statement',
-            'exit': '/exit',
-        }
-        if transaction in templates:
-            return render_template(templates[transaction])
-        if transaction in redirects:
-            return redirect(redirects[transaction])
     return render_template('menu.html')
+
+@app.route('/withdraw')
+@login_required
+def withdraw():
+    return render_template('withdraw.html')
 
 @app.route('/balance_inquiry', methods=['GET'])
 def balance_inquiry():
@@ -115,28 +120,6 @@ def balance_inquiry():
     finally:
         cur.close()
         conn.close()
-
-@app.route('/withdraw', methods=['GET', 'POST'])
-def withdraw():
-    account_type = None  # Default value in case it's not passed from a form
-    if request.method == 'POST':
-        # Get the account type selected by the user
-        account_type = request.form.get('account_type')
-        if account_type:
-            account_type = account_type.capitalize()  # Normalize the case
-        if not account_type:
-            flash("Please select an account type!", "error")
-            return render_template('withdraw.html')
-        # Store the account type in session to persist it across routes
-        session['account_type'] = account_type
-        # Ensure the account type is valid before continuing
-        valid_account_types = ['Savings', 'Current', 'Credit']
-        if account_type not in valid_account_types:
-            flash(f"{account_type} is not a valid account type!", "error")
-            return render_template('withdraw.html')
-        # Redirect to withdraw_amount to enter withdrawal details
-        return redirect(url_for('withdraw_amount'))
-    return render_template('withdraw.html', account_type=account_type)
 
 @app.route('/withdraw_amount', methods=['GET', 'POST'])
 def withdraw_amount():
@@ -355,12 +338,6 @@ def change_pin():
             cur.close()
             conn.close()
     return render_template('change_pin.html')
-
-@app.route('/exit', methods=['GET', 'POST'])
-def logout_user():
-    session.clear()
-    flash("You have been logged out. Thank you for using the ATM!", "info")
-    return redirect('/')
 
 if __name__ == "__main__":
     app.run(debug=True)

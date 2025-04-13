@@ -15,15 +15,15 @@ def test_login_page(client):
     response = client.get('/login')
     assert response.status_code == 200
 
-def test_menu_page(client):
+def test_menu_page_without_auth(client):
     response = client.get('/menu')
-    assert response.status_code == 200
+    assert response.status_code == 302  # Should redirect to login when not authenticated
 
 def test_balance_inquiry_page(client):
     response = client.get('/balance_inquiry')
     assert response.status_code == 302  # Redirects to login if not authenticated
 
-def test_withdraw_page(client):
+def test_withdraw_page_without_auth(client):
     response = client.get('/withdraw')
     assert response.status_code == 302  # Redirects to login if not authenticated
 
