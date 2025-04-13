@@ -3,16 +3,17 @@ from flask import Flask, render_template, request, redirect, flash, session, url
 from decimal import Decimal
 import mysql.connector
 from functools import wraps
+import os
 
 app = Flask(__name__, static_folder='static')
-app.secret_key = 'atm_interface'  # For flash messages
+app.secret_key = os.environ.get('SECRET_KEY', 'atm_interface')  # For flash messages
 
 # Database connection configuration
 db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '#Spoorti8088',
-    'database': 'atm_db'
+    'host': os.environ.get('MYSQL_HOST', 'localhost'),
+    'user': os.environ.get('MYSQL_USER', 'root'),
+    'password': os.environ.get('MYSQL_PASSWORD', '#Spoorti8088'),
+    'database': os.environ.get('MYSQL_DATABASE', 'atm_db')
 }
 
 def get_db_connection():
@@ -20,7 +21,8 @@ def get_db_connection():
         conn = mysql.connector.connect(**db_config)
         return conn
     except mysql.connector.Error as err:
-        print(f"Error connecting to database: {err}")
+        app.logger.error(f"Database connection error: {err}")
+        flash("Unable to connect to database. Please try again later.", "error")
         return None
 
 @app.route('/')
@@ -345,6 +347,15 @@ def change_pin():
             cur.close()
             conn.close()
     return render_template('change_pin.html')
+
+@app.errorhandler(500)
+def internal_error(error):
+    app.logger.error(f'Server Error: {error}')
+    return render_template('error.html', error="Internal Server Error. Please try again later."), 500
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('error.html', error="Page not found."), 404
 
 if __name__ == "__main__":
     app.run(debug=True)
