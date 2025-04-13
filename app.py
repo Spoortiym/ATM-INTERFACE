@@ -4,6 +4,11 @@ from decimal import Decimal
 import mysql.connector
 from functools import wraps
 import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = os.environ.get('SECRET_KEY', 'atm_interface')  # For flash messages
@@ -13,21 +18,39 @@ db_config = {
     'host': os.environ.get('MYSQL_HOST', 'localhost'),
     'user': os.environ.get('MYSQL_USER', 'root'),
     'password': os.environ.get('MYSQL_PASSWORD', '#Spoorti8088'),
-    'database': os.environ.get('MYSQL_DATABASE', 'atm_db')
+    'database': os.environ.get('MYSQL_DATABASE', 'atm_db'),
+    'port': int(os.environ.get('MYSQL_PORT', 3306))
 }
+
+# Log database configuration (excluding password)
+logger.info(f"Database host: {db_config['host']}")
+logger.info(f"Database user: {db_config['user']}")
+logger.info(f"Database name: {db_config['database']}")
+logger.info(f"Database port: {db_config['port']}")
 
 def get_db_connection():
     try:
+        logger.debug("Attempting database connection...")
         conn = mysql.connector.connect(**db_config)
+        logger.info("Database connection successful")
         return conn
     except mysql.connector.Error as err:
-        app.logger.error(f"Database connection error: {err}")
+        logger.error(f"Database connection error: {err}")
         flash("Unable to connect to database. Please try again later.", "error")
         return None
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try:
+        # Test database connection on homepage
+        conn = get_db_connection()
+        if conn:
+            conn.close()
+            logger.info("Database connection test successful")
+        return render_template('index.html')
+    except Exception as e:
+        logger.error(f"Error in index route: {str(e)}")
+        return render_template('error.html', error=f"Application Error: {str(e)}"), 500
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -350,8 +373,8 @@ def change_pin():
 
 @app.errorhandler(500)
 def internal_error(error):
-    app.logger.error(f'Server Error: {error}')
-    return render_template('error.html', error="Internal Server Error. Please try again later."), 500
+    logger.error(f'Server Error: {error}')
+    return render_template('error.html', error="Internal Server Error. Please check application logs for details."), 500
 
 @app.errorhandler(404)
 def not_found_error(error):

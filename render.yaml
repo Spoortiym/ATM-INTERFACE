@@ -4,7 +4,9 @@ services:
     env: python
     region: singapore  # Choose the region closest to your users
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: |
+      python init_db.py
+      gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
@@ -24,6 +26,8 @@ services:
           property: password
       - key: MYSQL_DATABASE
         value: atm_db
+      - key: MYSQL_PORT
+        value: 3306
 
 databases:
   - name: atm-db
