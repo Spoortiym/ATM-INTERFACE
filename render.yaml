@@ -14,4 +14,4 @@ services:
       - key: MYSQL_PASSWORD
         value: your-mysql-password
       - key: MYSQL_DATABASE
-        value: atm_db 
+        value: atm_db
