@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: atm-interface
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: FLASK_APP
+        value: app.py
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DB_HOST
+        value: localhost
+      - key: DB_USER
+        value: root
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: atm_db
+
+  - type: pserv
+    name: atm-db
+    env: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./Dockerfile.db
+    disk:
+      name: data
+      mountPath: /var/lib/mysql
+      sizeGB: 1 
