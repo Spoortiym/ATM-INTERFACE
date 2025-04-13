@@ -7,14 +7,21 @@ from functools import wraps
 app = Flask(__name__, static_folder='static')
 app.secret_key = 'atm_interface'  # For flash messages
 
-# Database connection
+# Database connection configuration
+db_config = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '#Spoorti8088',
+    'database': 'atm_db'
+}
+
 def get_db_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="#Spoorti8088"
-        database="atm_db"
-    )
+    try:
+        conn = mysql.connector.connect(**db_config)
+        return conn
+    except mysql.connector.Error as err:
+        print(f"Error connecting to database: {err}")
+        return None
 
 @app.route('/')
 def index():
