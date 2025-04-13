@@ -2,16 +2,31 @@ services:
   - type: web
     name: atm-interface
     env: python
+    region: singapore  # Choose the region closest to your users
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
+      - key: FLASK_ENV
+        value: production
       - key: MYSQL_HOST
-        value: your-mysql-host
+        fromDatabase:
+          name: atm-db
+          property: host
       - key: MYSQL_USER
-        value: your-mysql-user
+        fromDatabase:
+          name: atm-db
+          property: user
       - key: MYSQL_PASSWORD
-        value: your-mysql-password
+        fromDatabase:
+          name: atm-db
+          property: password
       - key: MYSQL_DATABASE
         value: atm_db
+
+databases:
+  - name: atm-db
+    databaseName: atm_db
+    user: atm_user
+    plan: free
