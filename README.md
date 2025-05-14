@@ -91,7 +91,7 @@ atm-interface/
     5.REST API integration for mobile clients
 
 ## 👩‍💻 Author
-Manasa H K,
+Manasa H K, Spoorti Y M, P K Shreya
 B.Tech CSE Student, RV University, Bengaluru
 
 ## 📜 License
