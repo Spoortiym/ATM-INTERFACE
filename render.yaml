@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: flask-app
+    runtime: python
+    buildCommand: ""
+    startCommand: gunicorn app:app
