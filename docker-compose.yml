@@ -1,0 +1,60 @@
+# version: '3'
+
+# services:
+#   flask:
+#     build: .
+#     container_name: flask-app
+#     ports:
+#       - "5000:5000"
+#     depends_on:
+#       - mysql
+#     environment:
+#       - FLASK_ENV=development
+
+#   mysql:
+#     image: mysql:5.7
+#     environment:
+#       MYSQL_ROOT_PASSWORD: shreyapk
+#       MYSQL_DATABASE: atm_db
+#     ports:
+#       - "3306:3306"
+
+version: '3.8'
+
+services:
+  flask:
+    build: .
+    container_name: flask-app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+    environment:
+      - FLASK_ENV=development
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=#Spoorti8088
+      - MYSQL_DB=atmdb
+    # Ensure Flask app is accessible from the external network
+    networks:
+      - flask-mysql-network
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: "#Spoorti8088"
+      MYSQL_DATABASE: atmdb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - flask-mysql-network
+
+volumes:
+  mysql_data:  # Persist MySQL data
+
+networks:
+  flask-mysql-network:
+    driver: bridge
